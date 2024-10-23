@@ -14,5 +14,5 @@ export const appConfig: ApplicationConfig = {
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:4000',
+  apiUrl: 'http://135.225.38.254:4000',
 };

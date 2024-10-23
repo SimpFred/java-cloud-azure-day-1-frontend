@@ -4,12 +4,18 @@
     <tr>
       <th>First Name</th>
       <th>Last Name</th>
+      <th>Albums</th>
     </tr>
   </thead>
   <tbody>
     <tr *ngFor="let artist of artists">
       <td>{{ artist.firstName }}</td>
       <td>{{ artist.lastName }}</td>
+      <td>
+        <ul>
+          <li *ngFor="let album of artist.albums">{{ album.title }}</li>
+        </ul>
+      </td>
     </tr>
   </tbody>
 </table>

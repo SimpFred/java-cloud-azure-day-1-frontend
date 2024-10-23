@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AlbumService } from '../services/album.service';
 import { Router } from '@angular/router';
+import { AlbumStateService } from '../states/album-state.service';
 
 @Component({
   selector: 'app-album',
@@ -13,14 +13,17 @@ import { Router } from '@angular/router';
 export class AlbumComponent implements OnInit {
   albums: any[] = [];
 
-  constructor(private albumService: AlbumService, private router: Router) {}
+  constructor(
+    private albumStateService: AlbumStateService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadAlbums();
   }
 
   loadAlbums(): void {
-    this.albumService.getAlbums().subscribe((data) => {
+    this.albumStateService.albums$.subscribe((data) => {
       this.albums = data;
     });
   }

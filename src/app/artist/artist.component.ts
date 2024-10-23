@@ -1,25 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { ArtistService } from '../services/artist.service';
 import { CommonModule } from '@angular/common';
+import { ArtistStateService } from '../states/artist-state.service';
 
 @Component({
   selector: 'app-artist',
   templateUrl: './artist.component.html',
   styleUrls: ['./artist.component.css'],
   standalone: true,
-  imports: [CommonModule], // Lägg till CommonModule i imports
+  imports: [CommonModule],
 })
 export class ArtistComponent implements OnInit {
   artists: any[] = [];
 
-  constructor(private artistService: ArtistService) {}
+  constructor(private artistStateService: ArtistStateService) {}
 
   ngOnInit(): void {
-    this.loadArtists();
-  }
-
-  loadArtists(): void {
-    this.artistService.getArtists().subscribe((data) => {
+    this.artistStateService.artists$.subscribe((data) => {
       this.artists = data;
     });
   }

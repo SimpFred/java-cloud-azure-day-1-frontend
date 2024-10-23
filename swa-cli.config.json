@@ -1,0 +1,14 @@
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "music-app": {
+      "appLocation": ".",
+      "outputLocation": "dist/music-app",
+      "appBuildCommand": "npm run build",
+      "run": "npm start",
+      "appDevserverUrl": "http://localhost:4200",
+      "appName": "music-app",
+      "resourceGroup": "students_infrastructure"
+    }
+  }
+}

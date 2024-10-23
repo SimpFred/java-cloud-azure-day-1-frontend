@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { AlbumService } from '../services/album.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LabelService } from '../services/label.service';
-import { ArtistService } from '../services/artist.service';
+import { ArtistStateService } from '../states/artist-state.service';
+import { LabelStateService } from '../states/label-state-service';
+import { AlbumStateService } from '../states/album-state.service';
 
 @Component({
   selector: 'app-create-album',
@@ -19,7 +19,7 @@ export class CreateAlbumComponent implements OnInit {
     year: '',
     genre: '',
     numberOfTracks: 0,
-    label: 0,
+    label: { id: 0, name: '', location: '' },
     artists: [],
   };
   newArtistId: number | null = null;
@@ -27,34 +27,61 @@ export class CreateAlbumComponent implements OnInit {
   newLabel: any = { name: '', location: '' };
   labels: any[] = [];
   artists: any[] = [];
+  albumId: number | null = null;
+  loading: boolean = false;
 
   constructor(
-    private albumService: AlbumService,
-    private labelService: LabelService,
-    private artistService: ArtistService,
+    private albumStateService: AlbumStateService,
+    private labelStateService: LabelStateService,
+    private artistStateService: ArtistStateService,
+    private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadLabels();
     this.loadArtists();
+    this.route.params.subscribe((params) => {
+      if (params['id']) {
+        this.albumId = +params['id'];
+        this.loadAlbum(this.albumId);
+      }
+    });
   }
 
   loadLabels(): void {
-    this.labelService.getLabels().subscribe((data) => {
+    this.labelStateService.labels$.subscribe((data) => {
       this.labels = data;
     });
+    this.labelStateService.loadLabels();
   }
 
   loadArtists(): void {
-    this.artistService.getArtists().subscribe((data) => {
+    this.artistStateService.artists$.subscribe((data) => {
       this.artists = data;
     });
+    this.artistStateService.loadArtists();
+  }
+
+  loadAlbum(id: number): void {
+    this.albumStateService.getAlbum(id).subscribe((album) => {
+      this.newAlbum = album;
+    });
+  }
+
+  get labelId(): number {
+    return this.newAlbum.label.id;
+  }
+
+  set labelId(value: number) {
+    const label = this.labels.find((l) => l.id.toString() === value.toString());
+    this.newAlbum.label = label ? label : { id: value, name: '', location: '' };
   }
 
   openModal(elementId: string): void {
     const modal = document.getElementById(elementId);
     this.newArtist = { firstName: '', lastName: '' }; // Reset the form
+    this.newLabel = { name: '', location: '' }; // Reset the form
     if (modal) {
       modal.style.display = 'block';
     }
@@ -68,18 +95,15 @@ export class CreateAlbumComponent implements OnInit {
   }
 
   saveNewArtist(): void {
-    this.artistService.createArtist(this.newArtist).subscribe((artist) => {
-      this.artists.push(artist);
+    this.artistStateService.addArtist(this.newArtist).subscribe((artist) => {
       this.newArtistId = artist.id;
       this.closeModal('addArtistModal');
     });
   }
 
   saveNewLabel(): void {
-    this.labelService.createLabel(this.newLabel).subscribe((label) => {
-      this.labels.push(label);
-      this.newAlbum.label = label.id;
-      this.newLabel = { name: '', location: '' }; // Nollställ värdena
+    this.labelStateService.addLabel(this.newLabel).subscribe((label) => {
+      this.newAlbum.label = label;
       this.closeModal('addLabelModal');
     });
   }
@@ -99,7 +123,8 @@ export class CreateAlbumComponent implements OnInit {
     }
     if (
       this.newAlbum.numberOfTracks === null ||
-      this.newAlbum.numberOfTracks === undefined
+      this.newAlbum.numberOfTracks === undefined ||
+      this.newAlbum.numberOfTracks < 1
     ) {
       alert('Please enter the number of tracks.');
       return false;
@@ -120,9 +145,37 @@ export class CreateAlbumComponent implements OnInit {
       return;
     }
 
-    this.albumService.createAlbum(this.newAlbum).subscribe((album) => {
-      this.router.navigate(['/albums']);
-    });
+    this.loading = true;
+
+    if (this.albumId) {
+      this.albumStateService
+        .updateAlbum(this.albumId, this.newAlbum)
+        .subscribe({
+          next: (album) => {
+            console.log('Album updated successfully:', album);
+            this.router.navigate(['/albums']);
+          },
+          error: (error) => {
+            console.error('Error updating album:', error);
+          },
+          complete: () => {
+            this.loading = false;
+          },
+        });
+    } else {
+      this.albumStateService.addAlbum(this.newAlbum).subscribe({
+        next: (album) => {
+          console.log('Album created successfully:', album);
+          this.router.navigate(['/albums']);
+        },
+        error: (error) => {
+          console.error('Error creating album:', error);
+        },
+        complete: () => {
+          this.loading = false;
+        },
+      });
+    }
   }
 
   addArtist(): void {
@@ -144,7 +197,14 @@ export class CreateAlbumComponent implements OnInit {
   }
 
   getArtistName(artistId: number): string {
-    const artist = this.artists.find((a) => a.id === artistId);
+    const artist = this.artists.find((a) => {
+      return a.id.toString() === artistId.toString();
+    });
+
     return artist ? `${artist.firstName} ${artist.lastName}` : 'Unknown Artist';
+  }
+
+  getButtonString(): string {
+    return this.albumId ? 'Update Album' : 'Create Album';
   }
 }
