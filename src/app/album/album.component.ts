@@ -8,7 +8,7 @@ import { AlbumStateService } from '../states/album-state.service';
   templateUrl: './album.component.html',
   styleUrls: ['./album.component.css'],
   standalone: true,
-  imports: [CommonModule], // Lägg till CommonModule i imports
+  imports: [CommonModule],
 })
 export class AlbumComponent implements OnInit {
   albums: any[] = [];

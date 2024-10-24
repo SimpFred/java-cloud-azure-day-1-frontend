@@ -6,6 +6,6 @@ import { RouterModule } from '@angular/router';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   standalone: true,
-  imports: [RouterModule], // Importera RouterModule för att använda routerLink
+  imports: [RouterModule],
 })
 export class HomeComponent {}
